@@ -151,6 +151,7 @@ def mean_shift():
     reviews = []
     filt = {"_id": id}
     js = shops_collection.find(filter=filt).next()
+
     for i in range(len(js['reviews'])):
         reviews.append(mli.correctify(js['reviews'][i]['text']))
     tfidf_vectorizer = TfidfVectorizer(max_df=0.5, min_df=2,
