@@ -8,4 +8,8 @@ mli_lib is our library
 
 test.py is for reading from csv file and write it into mongoDB.
 
+review_and_business_join_to_csv.py takes the csv of reviews and businesses, adds 'name', 'state' and 'city' to all reviews and writes the reviews to a .csv file.
+
+
+
 
