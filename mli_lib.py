@@ -1,4 +1,7 @@
-
+import pymongo
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.decomposition import NMF, LatentDirichletAllocation
 
 def correctify(string):
     ''' #Example string : b'test123' , returns test123
@@ -6,3 +9,83 @@ def correctify(string):
     :return: Valid string
     '''
     return string[2:-1]
+
+#def get_reviews_business(business_id):
+
+
+def get_review_city(city):
+    client = pymongo.MongoClient('localhost', 27017)
+    db = client['ml']
+    review_col = db.get_collection("review2")
+    city_filter = {
+        "city": city
+    }
+    reviews = review_col.find(filter = city_filter)
+    c_list = []
+    for city in reviews:
+        c_list.append(city)
+    return c_list
+
+def split_sentence(reviews):
+    new_rew = []
+    for i in range(len(reviews)):
+        splitted = str(correctify(reviews[i]['text'])).split(".")
+        for sent in splitted:
+            new_rew.append(sent)
+    return new_rew
+
+def print_top_words(model, feature_names, n_top_words):
+    for topic_idx, topic in enumerate(model.components_):
+        print("Topic #%d:" % topic_idx)
+        print(" | ".join([feature_names[i]
+                        for i in topic.argsort()[:-n_top_words - 1:-1]]))
+    print()
+
+
+def get_occurance(data):
+    words = {}
+    for sent in data:
+        for word in str(sent).split(" "):
+            count = words.get(word, -1)
+            if count == -1:
+                words[word] = 1
+            else:
+                words[word] += 1
+    return words
+
+def do_nmf(rev,n_features = 1000 ,n_topics = 10,n_top_words = 5,isSplit = 1,maxdf = 0.5,mindf = 0.0):
+    if isSplit == 1:
+        rev = split_sentence(rev)
+    else:
+        rev = [review['text'] for review in rev]
+    # Dictionary
+    tfidf_vectorizer = TfidfVectorizer(max_df=maxdf,min_df= mindf,
+                                       max_features=n_features,
+                                       stop_words='english', ngram_range=(2, 4))
+    tfidf = tfidf_vectorizer.fit_transform(rev)
+    tfidf_feature_names = tfidf_vectorizer.get_feature_names()
+    ##
+    nmf = NMF(n_components=n_topics, random_state=1,
+              alpha=0.0, beta=1, l1_ratio=.5).fit(tfidf)
+    print_top_words(nmf, tfidf_feature_names, n_top_words)
+
+def do_lda(rev,n_features = 1000 ,n_topics = 6,n_top_words = 6,isSplit = 1,maxdf = 0.5,mindf = 0.0):
+    if isSplit == 1:
+        rev = split_sentence(rev)
+    else:
+        rev = [review['text'] for review in rev]
+
+    tfidf_vectorizer = TfidfVectorizer(max_df=maxdf,min_df= mindf,
+                                       max_features=n_features,
+                                       stop_words='english',ngram_range=(3,3))
+    tfidf = tfidf_vectorizer.fit_transform(rev)
+    tfidf_feature_names = tfidf_vectorizer.get_feature_names()
+    lda = LatentDirichletAllocation(n_topics=n_topics, max_iter=5,
+                                    learning_method='online',
+                                    learning_offset=50.,
+                                    random_state=1)
+    lda.fit(tfidf)
+
+    print(tfidf_feature_names)
+    print("\nTopics in LDA model:")
+    print_top_words(lda, tfidf_feature_names, n_top_words)
