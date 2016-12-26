@@ -10,7 +10,6 @@ def correctify(string):
     '''
     return string[2:-1]
 
-
 def get_current_states():
     client = pymongo.MongoClient('localhost', 27017)
     db = client['ml']
@@ -38,12 +37,19 @@ def get_reviews_state(state):
     return s_list
 
 
-def get_reviews_business(business_id):
+def get_reviews_business(business_id, type = "all"):
     client = pymongo.MongoClient('localhost', 27017)
     db = client['ml']
     review_col = db.get_collection("review2")
+    if type == "pos":
+        star = {"$gt": 3}
+    elif type == "neg":
+        star = {"$lt": 3}
+    else:
+        star = {"$gt": 0}
     business_filter = {
-        "business_id": business_id
+        "business_id": business_id,
+        "stars": star
     }
     reviews = review_col.find(filter=business_filter)
     b_list = []
@@ -51,12 +57,21 @@ def get_reviews_business(business_id):
         b_list.append(rev)
     return b_list
 
-def get_review_city(city):
+def get_reviews_city(city, type = "all"):
+
+
     client = pymongo.MongoClient('localhost', 27017)
     db = client['ml']
     review_col = db.get_collection("review2")
+    if type == "pos":
+        star = { "$gt": 3 }
+    elif type == "neg":
+        star = { "$lt": 3 }
+    else:
+        star = { "$gt": 0 }
     city_filter = {
-        "city": city
+        "city": city,
+        "stars": star
     }
     reviews = review_col.find(filter = city_filter)
     c_list = []

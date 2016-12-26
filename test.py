@@ -73,8 +73,8 @@ def test():
         print(cities.values())
 
 
-reviews = mli.get_reviews_business("KayYbHCt-RkbGcPdGOThNg")
+reviews = mli.get_reviews_business("KayYbHCt-RkbGcPdGOThNg", type="pos")
 #mli.do_nmf(reviews[:1500])
 print(len(reviews))
-mli.do_lda(reviews[:1000],n_features=1000,n_topics=5,range=(1,2))
-mli.do_nmf(reviews[:1000],n_features=1000,n_topics=5,range=(1,2))
+mli.do_lda(reviews[:20000],n_features=1000,n_topics=10,mindf=0.02,n_top_words=5,range=(1,2))
+mli.do_nmf(reviews[:20000],n_features=1000,n_topics=10,mindf=0.02,n_top_words=5,range=(1,2))
