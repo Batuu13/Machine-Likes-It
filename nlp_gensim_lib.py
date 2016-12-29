@@ -10,9 +10,18 @@ nltk.download()
 A new window will open. In that windows select the required packages(I don't know yet) or download all packages.
 '''
 
+'''
+gensim LDA document:
+https://radimrehurek.com/gensim/models/ldamodel.html
+'''
+
 from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
 import string
+
+import gensim
+from gensim import corpora
+
 stop = set(stopwords.words('english'))
 exclude = set(string.punctuation)
 lemma = WordNetLemmatizer()
@@ -25,3 +34,29 @@ def clean(doc):
     return normalized
 
 
+#cleans the reviews, does the lda, prints results it to console and appends them 'tests.txt' file.
+def do_lda(reviews, parameters):
+
+    doc_clean = [clean(doc['text']).split() for doc in reviews]
+
+    # Creating the term dictionary of our courpus, where every unique term is assigned an index.
+    dictionary = corpora.Dictionary(doc_clean)
+
+    # Converting list of documents (corpus) into Document Term Matrix using dictionary prepared above.
+    doc_term_matrix = [dictionary.doc2bow(doc) for doc in doc_clean]
+
+    # Creating the object for LDA model using gensim library
+    Lda = gensim.models.ldamodel.LdaModel
+
+    # Running and Trainign LDA model on the document term matrix.
+
+    ldamodel = Lda(doc_term_matrix, num_topics=parameters.get('num_topics'), id2word=dictionary,
+                   passes=parameters.get('passes'), alpha=parameters.get('alpha'), eta=parameters.get('eta'))
+
+    result = ldamodel.print_topics(num_topics=parameters.get('print_num_topic'), num_words=parameters.get('print_num_word'))
+
+    print(result)
+
+    toWrite = '\n\nParameters \n' + str(parameters) + '\nResult \n' + str(result)
+    with open("tests.txt", "a") as testfile:
+        testfile.write(toWrite)
