@@ -34,7 +34,7 @@ def clean(doc):
     return normalized
 
 
-#cleans the reviews, does the lda, prints results it to console and appends them 'tests.txt' file.
+#cleans the reviews, does the lda, prints results to console and appends them 'tests.txt' file.
 def do_lda(reviews, parameters):
 
     doc_clean = [clean(doc['text']).split() for doc in reviews]
