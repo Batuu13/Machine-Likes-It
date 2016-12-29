@@ -10,6 +10,25 @@ def correctify(string):
     '''
     return string[2:-1]
 
+def get_business_id_list(reviewCount):
+    client = pymongo.MongoClient('localhost', 27017)
+    db = client['ml']
+    review_col = db.get_collection("review2")
+
+    return review_col.aggregate([
+        {
+            "$group": {
+                "_id": "$business_id",
+                "count": { "$sum": 1}
+            }
+        },
+        {
+            "$match": {
+                "count": {"$gte": reviewCount}
+            }
+        }
+    ])
+
 def get_current_states():
     client = pymongo.MongoClient('localhost', 27017)
     db = client['ml']
@@ -90,8 +109,7 @@ def split_sentence(reviews):
 def print_top_words(model, feature_names, n_top_words):
     for topic_idx, topic in enumerate(model.components_):
         print("Topic #%d:" % topic_idx)
-        print(" | ".join([feature_names[i]
-                        for i in topic.argsort()[:-n_top_words - 1:-1]]))
+        print(" | ".join([feature_names[i] for i in topic.argsort()[:-n_top_words - 1:-1]]))
     print()
 
 
@@ -139,7 +157,9 @@ def do_lda(rev,n_features = 1000 ,n_topics = 6,n_top_words = 6,isSplit = 1,maxdf
                                     learning_offset=50.,
                                     random_state=1)
     lda.fit(tfidf)
-
-    print(tfidf_feature_names)
+    print([tfidf_feature_names[i] for i in lda.components_[0].argsort()[:-n_top_words - 1:-1]])
+    print(lda.components_[0])
     print("\nTopics in LDA model:")
     print_top_words(lda, tfidf_feature_names, n_top_words)
+
+
