@@ -3,6 +3,9 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.decomposition import NMF, LatentDirichletAllocation
 
+review_col_name = 'reviews'
+db_name = 'yelpdata'
+
 def correctify(string):
     ''' #Example string : b'test123' , returns test123
     :param string: Desired raw string
@@ -12,8 +15,8 @@ def correctify(string):
 
 def get_business_id_list(reviewCount):
     client = pymongo.MongoClient('localhost', 27017)
-    db = client['ml']
-    review_col = db.get_collection("review2")
+    db = client[db_name]
+    review_col = db.get_collection(review_col_name)
 
     return review_col.aggregate([
         {
@@ -31,21 +34,21 @@ def get_business_id_list(reviewCount):
 
 def get_current_states():
     client = pymongo.MongoClient('localhost', 27017)
-    db = client['ml']
-    review_col = db.get_collection("review2")
+    db = client[db_name]
+    review_col = db.get_collection(review_col_name)
     return review_col.distinct("state")
 
 def get_current_cities():
     client = pymongo.MongoClient('localhost', 27017)
-    db = client['ml']
-    review_col = db.get_collection("review2")
+    db = client[db_name]
+    review_col = db.get_collection(review_col_name)
     return review_col.distinct("city")
 
 
 def get_reviews_state(state):
     client = pymongo.MongoClient('localhost', 27017)
-    db = client['ml']
-    review_col = db.get_collection("review2")
+    db = client[db_name]
+    review_col = db.get_collection(review_col_name)
     state_filter = {
         "state": state
     }
@@ -58,8 +61,8 @@ def get_reviews_state(state):
 
 def get_reviews_business(business_id, type = "all"):
     client = pymongo.MongoClient('localhost', 27017)
-    db = client['ml']
-    review_col = db.get_collection("review2")
+    db = client[db_name]
+    review_col = db.get_collection(review_col_name)
     if type == "pos":
         star = {"$gt": 3}
     elif type == "neg":
@@ -80,8 +83,8 @@ def get_reviews_city(city, type = "all"):
 
 
     client = pymongo.MongoClient('localhost', 27017)
-    db = client['ml']
-    review_col = db.get_collection("review2")
+    db = client[db_name]
+    review_col = db.get_collection(review_col_name)
     if type == "pos":
         star = { "$gt": 3 }
     elif type == "neg":
