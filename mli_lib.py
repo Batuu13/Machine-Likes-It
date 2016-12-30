@@ -1,10 +1,11 @@
 import pymongo
 import numpy as np
+import nlp_gensim_lib as nlpgen
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.decomposition import NMF, LatentDirichletAllocation
 
-review_col_name = 'reviews'
-db_name = 'yelpdata'
+review_col_name = 'review2'
+db_name = 'ml'
 
 def correctify(string):
     ''' #Example string : b'test123' , returns test123
@@ -104,7 +105,7 @@ def get_reviews_city(city, type = "all"):
 def split_sentence(reviews):
     new_rew = []
     for i in range(len(reviews)):
-        splitted = str(correctify(reviews[i]['text'])).split(".")
+        splitted = str(reviews[i]['text']).split(".")
         for sent in splitted:
             new_rew.append(sent)
     return new_rew
@@ -115,7 +116,13 @@ def print_top_words(model, feature_names, n_top_words):
         print(" | ".join([feature_names[i] for i in topic.argsort()[:-n_top_words - 1:-1]]))
     print()
 
-
+def get_top_words(model, feature_names, n_top_words):
+    topics = []
+    for topic_idx, topic in enumerate(model.components_):
+        words = []
+        words.append([feature_names[i] for i in topic.argsort()[:-n_top_words - 1:-1]])
+        topics.append(words)
+    return topics
 def get_occurance(data):
     words = {}
     for sent in data:
@@ -129,7 +136,8 @@ def get_occurance(data):
 
 def do_nmf(rev,n_features = 1000 ,n_topics = 10,n_top_words = 5,isSplit = 1,maxdf = 0.5,mindf = 0.0,range=(2,2)):
     if isSplit == 1:
-        rev = split_sentence(rev)
+        rev2 = split_sentence(rev)
+        rev = [nlpgen.clean(review) for review in rev2]
     else:
         rev = [review['text'] for review in rev]
     # Dictionary
@@ -146,23 +154,24 @@ def do_nmf(rev,n_features = 1000 ,n_topics = 10,n_top_words = 5,isSplit = 1,maxd
 
 def do_lda(rev,n_features = 1000 ,n_topics = 6,n_top_words = 6,isSplit = 1,maxdf = 0.5,mindf = 0.0,range=(2,2)):
     if isSplit == 1:
-        rev = split_sentence(rev)
+        rev2 = split_sentence(rev)
+        rev = [nlpgen.clean(review) for review in rev2]
     else:
-        rev = [review['text'] for review in rev]
+        rev = [nlpgen.clean(review['text']) for review in rev]
 
     tfidf_vectorizer = TfidfVectorizer(max_df=maxdf,min_df= mindf,
                                        max_features=n_features,
                                        stop_words='english',ngram_range=range)
     tfidf = tfidf_vectorizer.fit_transform(rev)
     tfidf_feature_names = tfidf_vectorizer.get_feature_names()
-    lda = LatentDirichletAllocation(n_topics=n_topics, max_iter=5,
+    lda = LatentDirichletAllocation(n_topics=n_topics, max_iter=10,
                                     learning_method='online',
                                     learning_offset=50.,
                                     random_state=1)
     lda.fit(tfidf)
-    print([tfidf_feature_names[i] for i in lda.components_[0].argsort()[:-n_top_words - 1:-1]])
-    print(lda.components_[0])
+    #print([tfidf_feature_names[i] for i in lda.components_[0].argsort()[:-n_top_words - 1:-1]])
+    #print(lda.components_[0])
     print("\nTopics in LDA model:")
     print_top_words(lda, tfidf_feature_names, n_top_words)
-
+    return get_top_words(lda, tfidf_feature_names, n_top_words)
 
