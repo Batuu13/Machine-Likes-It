@@ -14,12 +14,19 @@ def correctify(string):
     '''
     return string[2:-1]
 
-def get_business_id_list(reviewCount):
+def get_business_id_list(reviewCount,cityName):
     client = pymongo.MongoClient('localhost', 27017)
     db = client[db_name]
     review_col = db.get_collection(review_col_name)
 
     return review_col.aggregate([
+{
+            "$match": {
+              'city' : cityName
+
+
+            }
+        },
         {
             "$group": {
                 "_id": "$business_id",
@@ -28,7 +35,9 @@ def get_business_id_list(reviewCount):
         },
         {
             "$match": {
+
                 "count": {"$gte": reviewCount}
+
             }
         }
     ])
